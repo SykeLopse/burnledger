@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 
 type Subscription = {
-  id: number;
+  id: string | number;
   name: string;
   category: string;
   amount: number;
@@ -177,33 +177,74 @@ export default function Home() {
       .includes(search.toLowerCase()),
   );
 
-  function createSubscription(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadSubscriptions() {
+      try {
+        const response = await fetch("/api/subscriptions");
+
+        if (!response.ok) {
+          throw new Error("Failed to load subscriptions.");
+        }
+
+        const data = (await response.json()) as Subscription[];
+
+        if (!ignore) {
+          setSubscriptions(data);
+        }
+      } catch {
+        if (!ignore) {
+          setNotice("Using demo data because subscriptions could not be loaded.");
+        }
+      }
+    }
+
+    loadSubscriptions();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  async function createSubscription(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const amount = Number(draftAmount);
+    const subscriptionName = draftName.trim();
 
-    if (!draftName.trim() || !Number.isFinite(amount) || amount <= 0) {
+    if (!subscriptionName || !Number.isFinite(amount) || amount <= 0) {
       setNotice("Enter a subscription name and a valid monthly amount.");
       return;
     }
 
-    setSubscriptions((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        name: draftName.trim(),
-        category: "Personal",
-        amount,
-        billing: "Monthly",
-        renewal: "2026-08-01",
-        accent: "from-sky-400 to-indigo-500",
-      },
-    ]);
+    try {
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: subscriptionName,
+          amount,
+          category: "Personal",
+        }),
+      });
 
-    setDraftName("");
-    setDraftAmount("");
-    setShowCreate(false);
-    setNotice(`${draftName.trim()} was added to this dashboard session.`);
+      if (!response.ok) {
+        throw new Error("Failed to create subscription.");
+      }
+
+      const createdSubscription = (await response.json()) as Subscription;
+
+      setSubscriptions((current) => [...current, createdSubscription]);
+      setDraftName("");
+      setDraftAmount("");
+      setShowCreate(false);
+      setNotice(`${subscriptionName} was saved to the database.`);
+    } catch {
+      setNotice("Could not save subscription. Try again in a moment.");
+    }
   }
 
   return (
