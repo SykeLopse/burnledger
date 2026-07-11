@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       name,
       category,
       amount: amount.toFixed(2),
-      currency: "USD",
+      currency: "INR",
       billingCycle: "MONTHLY",
       renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       status: "ACTIVE",

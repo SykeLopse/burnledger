@@ -37,7 +37,7 @@ model Subscription {
   name         String
   category     String
   amount       Decimal            @db.Decimal(10, 2)
-  currency     String             @default("USD")
+  currency     String             @default("INR")
   billingCycle BillingCycle       @default(MONTHLY)
   renewalDate  DateTime
   status       SubscriptionStatus @default(ACTIVE)

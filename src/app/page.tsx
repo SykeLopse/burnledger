@@ -100,9 +100,9 @@ const monthlySeries = [
 ];
 
 const money = (amount: number) =>
-  new Intl.NumberFormat("en-US", {
+  new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     maximumFractionDigits: 0,
   }).format(amount);
 
@@ -598,7 +598,7 @@ export default function Home() {
                 />
               </label>
               <label className="block text-sm font-medium text-slate-300">
-                Monthly amount (USD)
+                Monthly amount (INR)
                 <input
                   type="number"
                   min="0"
